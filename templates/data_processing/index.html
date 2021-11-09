@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.1.1/dist/chart.min.js"></script>
+    <title>Demo Django | Celery | Redis</title>
+    <style>
+        h1, p {
+            text-align: center
+        }
+
+        table, th, td {
+            border: 1px solid black;
+            text-align: center
+        }
+
+        .center {
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+<h1>Data processing Demo</h1>
+<p id="message">{{ message }}</p>
+<table class="center">
+    <tr>
+        <th>Total</th>
+        <th>Processed</th>
+    </tr>
+    <tr>
+        <td id="total">0</td>
+        <td id="proccessed">0</td>
+    </tr>
+</table>
+
+<script>
+    $(document).ready(function () {
+        var progressUrl = "/celery-progress/" + "{{ task_id }}" + "/"
+        var interval = null;
+        var total = $("#total");
+        var proccessed = $("#proccessed");
+        var message = $("#message");
+        var t = 0;
+
+        console.log(progressUrl);
+
+
+        var update = function () {
+            $.ajax({
+                type: "GET",
+                url: progressUrl,
+                success: function (response) {
+                    console.log(response);
+                    if(t==0){
+                        t = response['progress']['total'];
+                    }
+                    total.text(t);
+                    proccessed.text(response['progress']['current'])
+                    if (response['state'] == "SUCCESS") {
+                        proccessed.text(t);
+                        total.text(t);
+                        message.text("Done");
+                        clearInterval(interval);
+                    }else if (response['state'] == "FAILURE" || response['state'] == 'PENDING'){
+                        clearInterval(interval);
+                    }
+                }
+            })
+        }
+        interval = setInterval(update, 1000);
+    });
+
+</script>
+</body>
+</html>

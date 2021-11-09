@@ -1,0 +1,39 @@
+version: "3.7"
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/usr/src/web/
+    command: >
+      sh -c "python manage.py makemigrations &&
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - 8000:8000
+      - 35729:35729
+    env_file:
+      - ./.env
+    stdin_open: true
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+
+  celery:
+    container_name: celery
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A django_celery_redis_demo worker -l info
+    volumes:
+      - .:/usr/src/web/
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+      - backend

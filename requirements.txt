@@ -1,0 +1,7 @@
+celery
+celery-progress
+django
+pandas
+redis
+django-celery-results
+openpyxl
